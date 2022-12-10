@@ -1,0 +1,9 @@
+{
+    "image-save-mode":"file-save",
+    "video-save-mode":"file-save",
+    "gif-save-mode":"file-save",
+    "hotkey-full_screenshot":"PrtSc",
+    "hotkey-rect_screenshot":"Ctrl+PrtSc",
+    "hotkey-exit":"Esc",
+    "save-path":"C://Users//image_saves"
+}
