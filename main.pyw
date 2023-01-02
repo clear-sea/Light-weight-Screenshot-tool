@@ -6,7 +6,7 @@ main_window=wx.Frame(None,title="LightScreenShot")
 main_window.Show()
 #设置主窗口
 main_window.SetIcon(wx.Icon('images/icon.jpg'))
-main_window.SetSize((800,600))
+main_window.SetSize((400,100))
 main_window.Center()
 #实例化类
 ImageShot=module.ImageShot()
@@ -14,7 +14,7 @@ ImageShot=module.ImageShot()
 def full_screenshot(event):
     ImageShot.full_screenshot()
 #按钮
-btn=wx.Button(main_window,label="✅",pos=(0,0))
+btn=wx.Button(main_window,label="全屏截图",pos=(0,0),size=(100,100))
 btn.Show()
 
 btn.Bind(wx.EVT_BUTTON,full_screenshot)
