@@ -1,8 +1,11 @@
 # LightScreenShot
 
-（by 刘清硕）
-
 使用Python写的学习型和实用性截图软件，正在更新
+（by 刘清硕）
+## 0.1
+使用wxpython做界面
+## 0.2
+改用tkinter做全局界面
 
 计划功能：
 
