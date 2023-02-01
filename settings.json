@@ -3,7 +3,7 @@
     "video-save-mode":"file-save",
     "gif-save-mode":"file-save",
     "hotkey-full_screenshot":"PrtSc",
-    "hotkey-rect_screenshot":"Ctrl+PrtSc",
-    "hotkey-exit":"Esc",
-    "image-save-path":"C://Users//LightScreenshotImages//"
+    "hotkey-rect_screenshot":"<ctrl!+<prtsc>",
+    "hotkey-exit":"<esc>",
+    "save-path":"C://Users//LightScreenshotImages//"
 }
