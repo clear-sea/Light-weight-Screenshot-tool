@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from pynput import keyboard
-from PIL import Image,ImageGrab,ImageTk
+from PIL import Image,ImageGrab
 import json
 import os
 import datetime
@@ -14,6 +14,7 @@ import pystray
 start_x=start_y=end_x=end_y=0
 is_doing=False
 main_window=None
+is_main_window_alive=False
 
 PrtScr=False
 Ctrl=False
@@ -24,13 +25,19 @@ with open("settings.json","r",encoding="utf-8") as f:
 
 #显示gui界面函数
 def show_GUI():
-    global main_window
+    global main_window,is_main_window_alive
+
+    if is_main_window_alive:
+        return None
 
     main_window=tk.Tk()
     main_window.geometry("400x100")
     main_window.iconbitmap("images/icon.ico")
     main_window.resizable(False,False)
     main_window.title("LightScreenShot")
+    main_window.protocol("WM_DELETE_WINDOW", )
+
+    is_main_window_alive=True
 
     #gui界面
     #全屏
@@ -119,42 +126,7 @@ def rect_screenshot():
 #2 GIF录制函数
 def make_GIF():
     global is_doing,icon,start_x,start_y,end_x,end_y
-    '''
-    生成录制视频函数
-    :return:
-    '''
-    #截取屏幕区域
-    #初始化
-    if main_window==None:
-        fsc_window=tk.Tk()
-    else:
-        fsc_window=tk.Toplevel(main_window)
-
-    fsc_window.attributes("-alpha",0.6)
-    fsc_window.attributes("-topmost",True)
-    fsc_window.attributes("-fullscreen",True)
-
-    cv=tk.Canvas(fsc_window,bg="white")
-    cv.place(x=0,y=0,width=fsc_window.winfo_screenwidth(),height=fsc_window.winfo_screenheight())
-
-    def grab(event):
-        global start_x,start_y,end_x,end_y
-
-        fsc_window.destroy()
-
-        if not((end_x-start_x==0)and(end_y-start_y==0)):
-            if end_x<start_x:
-                start_x,end_x=end_x,start_x
-            if end_y<start_y:
-                start_y,end_y=end_y,start_y
-
-    fsc_window.bind("<ButtonRelease-1>",grab)
-    fsc_window.bind("<Button-1>",start)
-    fsc_window.bind("<B1-Motion>",lambda event:OnDrag(event,cv))
-    fsc_window.bind("<Escape>",lambda event:fsc_window.destroy())
-
-    if main_window==None:
-        fsc_window.mainloop()
+    
     #end
     file_path=settings["save-path"]+datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")+".gif"
 
@@ -162,8 +134,8 @@ def make_GIF():
     #开始录制
     frames=[]
     while True:
-        img = ImageGrab.grab((start_x,start_y,end_x,end_y))
-        frames.append(img)
+        img = ImageGrab.grab()
+        frames.append(img)# (start_x,start_y,end_x,end_y)
 
         if is_doing==False:
             icon.notify(f"录制GIF已结束\n已保存{file_path}","轻量截图-录制GIF")
@@ -295,15 +267,15 @@ def listen_key(key):
 
     elif PrtScr and Shift and Ctrl and is_doing:
         stop_video_or_GIF()#结束GIF
-
+#退出整个程序函数
 def on_exit(icon):
     icon.stop()
     os._exit(0)#强制退出
-
+#打开截图保存的文件夹
 def open_image_dir():
     global settings
     os.system(f"start {settings['save-path']}")
-
+#键盘监听的函数
 def key_listener():
     #监听键盘
     with keyboard.Listener(on_press=listen_key) as listener:
