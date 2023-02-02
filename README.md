@@ -46,4 +46,4 @@
 
 运用多线程，但是python多线程不能很好地利用多核处理器（GIL惹得），录制屏幕视频时不能录制GIF
 
-使用第三方库：PIL，pynput，sounddevice，pyopencv2
+使用第三方库：PIL，pynput，sounddevice，pyopencv2，pystray
