@@ -41,4 +41,9 @@
 
 6.❌设置
 
+## 1.1
+前四项功能已实现，增加了使用pystray制作的系统托盘功能
+
+运用多线程，但是python多线程不能很好地利用多核处理器（GIL惹得），录制屏幕视频时不能录制GIF
+
 使用第三方库：PIL，pynput，sounddevice，pyopencv2
