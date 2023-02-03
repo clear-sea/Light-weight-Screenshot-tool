@@ -1,10 +1,6 @@
 {
-    "image-save-mode":"file-save",
-    "video-save-mode":"file-save",
-    "gif-save-mode":"file-save",
-    "hotkey-full_screenshot":"PrtSc",
-    "hotkey-rect_screenshot":"<ctrl!+<prtsc>",
-    "hotkey-exit":"<esc>",
+    "image-save-mode":"clipoard",
     "save-path":"C://Users//LightScreenshotImages//",
-    "video-audio":1
+    "video-audio":1,
+    "get-area":1
 }

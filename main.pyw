@@ -1,20 +1,22 @@
-import tkinter as tk
-from tkinter import messagebox
-from pynput import keyboard
-from PIL import Image,ImageGrab
-import json
-import os
-import datetime
-import threading
-import cv2
-import numpy as np
-import pystray
+import tkinter as tk#图形界面 内置库
+from tkinter import messagebox#消息弹窗模块
+from pynput import keyboard#键盘监听 第三方库
+from PIL import Image,ImageGrab#PIL图像处理 第三方库
+import json#json文件解析 内置库
+import os#文件操作 内置库
+import datetime#获取日期时间 内置库
+import threading#多线程 内置库
+import cv2#pyopencv2图像处理第三方库，用于合成视频 第三方库
+import numpy as np#高级数学库，用于转换图像 第三方库
+import pystray#windows系统托盘 第三方库
+import win32clipboard
+from io import BytesIO
+import UI
 
 #创建并且初始化全局变量
 start_x=start_y=end_x=end_y=0
 is_doing=False
 main_window=None
-is_main_window_alive=False
 
 PrtScr=False
 Ctrl=False
@@ -25,61 +27,43 @@ with open("settings.json","r",encoding="utf-8") as f:
 
 #显示gui界面函数
 def show_GUI():
-    global main_window,is_main_window_alive
-
-    if is_main_window_alive:
-        return None
+    global main_window
 
     main_window=tk.Tk()
-    main_window.geometry("400x100")
+    main_window["bg"]="white"
+    main_window.geometry("400x150")
     main_window.iconbitmap("images/icon.ico")
     main_window.resizable(False,False)
     main_window.title("LightScreenShot")
-    main_window.protocol("WM_DELETE_WINDOW", )
-
-    is_main_window_alive=True
+    main_window.protocol("WM_DELETE_WINDOW",main_window.withdraw)
 
     #gui界面
-    #全屏
+    #文本标签
+    #0全屏文本
     l1=tk.Label(main_window,bg="white",text="全屏截图\nPrtScr")
     l1.place(x=0,y=0,width=100,height=100)
-    #矩形
+    #1矩形文本
     l2=tk.Label(main_window,bg="white",text="矩形截图\n(按esc退出)\nCtrl+PrtScr")
     l2.place(x=100,y=0,width=100,height=100)
-    #GIF
+    #2GIF文本
     l3=tk.Label(main_window,bg="white",text="开始/结束\nGIF录制\nCtrl+Shift+PrtScr")
     l3.place(x=200,y=0,width=100,height=100)
-    #视频录制
+    #3视频录制文本
     l4=tk.Label(main_window,bg="white",text="开始/结束\n视频录制\nShift+PrtScr")
     l4.place(x=300,y=0,width=100,height=100)
+    #按钮
+    #0
+    btn1=UI.Button(main_window,(10,110),(55,30),"设置",config)
+    
+    #主循环
     main_window.mainloop()
 
-    main_window=None
-
-#其他功能函数
-def create_dirs(path):
-    if not os.path.exists(path):
-        os.mkdir(path)
-#画出屏幕的功能
-def start(event):
-        global start_x,start_y,end_x,end_y
-
-        start_x,start_y=event.x,event.y
-
-def OnDrag(event,cv):
-    global start_x,start_y,end_x,end_y
-
-    end_x=event.x
-    end_y=event.y
-    cv.delete("all")
-    cv.create_rectangle(start_x,start_y,end_x-start_x,end_y-start_y,fill="black")
 #功能函数
 #0全屏截图函数
 def full_screenshot():
     global icon
 
     image=ImageGrab.grab()
-    create_dirs(settings["save-path"])
     file_path=settings["save-path"]+datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")+".jpg"
     image.save(file_path)
     
@@ -90,52 +74,70 @@ def rect_screenshot():
 
     all_image=ImageGrab.grab()#先截取全屏幕
     #初始化
-    if main_window==None:
-        fsc_window=tk.Tk()
-    else:
-        fsc_window=tk.Toplevel(main_window)
-
-    fsc_window.attributes("-alpha",0.6)
-    fsc_window.attributes("-topmost",True)
-    fsc_window.attributes("-fullscreen",True)
-
-    cv=tk.Canvas(fsc_window,bg="white")
-    cv.place(x=0,y=0,width=fsc_window.winfo_screenwidth(),height=fsc_window.winfo_screenheight())
-
+    fsc_window=UI.Drag_Window(main_window)
     def grab(event):
+        start_x=fsc_window.start_x
+        start_y=fsc_window.start_y
+        end_x=fsc_window.end_x
+        end_y=fsc_window.end_y
+
         fsc_window.destroy()
 
-        if not((end_x-start_x==0)and(end_y-start_y==0)):
-            if not((end_x<start_x)or(end_y<start_y)):
-                image=all_image.crop((start_x,start_y,end_x,end_y))#再把全屏截图截取指定部分
-                file_path=settings["save-path"]+datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")+".jpg"
-                image.save(file_path)
-                
-                icon.notify(f"截图成功\n已保存{file_path}","轻量截图")
+        image=all_image.crop((start_x,start_y,end_x,end_y))#再把全屏截图截取指定部分
+        #保存模式
+        if settings["image-save-mode"]=="file":
+            file_path=settings["save-path"]+datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")+".jpg"
+            image.save(file_path)
+            
+            icon.notify(f"截图成功\n已保存{file_path}","轻量截图")
+        elif settings["image-save-mode"]=="clipoard":
+            output = BytesIO()
+            # 用BMP (Bitmap) 格式存储
+            # 这里是位图，然后用output字节对象来存储
+            image.save(output, 'BMP')
+            # BMP图片有14字节的header，需要额外去除
+            data = output.getvalue()[14:]
+            # 关闭
+            output.close()
+            win32clipboard.OpenClipboard()
+            win32clipboard.EmptyClipboard()
+            win32clipboard.SetClipboardData(win32clipboard.CF_DIB,data)
+            win32clipboard.CloseClipboard()
+
+            icon.notify(f"截图成功\n已储存到剪切板","轻量截图")
 
     fsc_window.bind("<ButtonRelease-1>",grab)
-    fsc_window.bind("<Button-1>",start)
-    fsc_window.bind("<B1-Motion>",lambda event:OnDrag(event,cv))
     fsc_window.bind("<Escape>",lambda event:fsc_window.destroy())
 
-    if main_window==None:
-        fsc_window.mainloop()
-
-    start_x=start_y=end_x=end_y=0
+    start_x=start_y=end_x=end_y=None
 
 #2 GIF录制函数
 def make_GIF():
     global is_doing,icon,start_x,start_y,end_x,end_y
-    
-    #end
+    if settings["get-area"]:
+        #初始化
+        fsc_window=UI.Drag_Window(main_window)
+        #截取屏幕区域
+        def grab(event):
+            global start_x,start_y,end_x,end_y
+            start_x=fsc_window.start_x
+            start_y=fsc_window.start_y
+            end_x=fsc_window.end_x
+            end_y=fsc_window.end_y
+
+            fsc_window.destroy()
+
+        fsc_window.bind("<ButtonRelease-1>",grab)
+        fsc_window.bind("<Escape>",lambda event:fsc_window.destroy())
+        #end
     file_path=settings["save-path"]+datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")+".gif"
 
     icon.notify("开始录制GIF","轻量截图-录制GIF")
     #开始录制
     frames=[]
     while True:
-        img = ImageGrab.grab()
-        frames.append(img)# (start_x,start_y,end_x,end_y)
+        img = ImageGrab.grab((start_x,start_y,end_x,end_y))
+        frames.append(img)
 
         if is_doing==False:
             icon.notify(f"录制GIF已结束\n已保存{file_path}","轻量截图-录制GIF")
@@ -148,39 +150,23 @@ def make_GIF():
 #3 录制视频
 def make_video():
     global is_doing,icon,start_x,start_y,end_x,end_y
-    #截取屏幕区域
-    #初始化
-    if main_window==None:
-        fsc_window=tk.Tk()
-    else:
-        fsc_window=tk.Toplevel(main_window)
+    
+    if settings["get-area"]:
+        #初始化
+        fsc_window=UI.Drag_Window(main_window)
+        #截取屏幕区域
+        def grab(event):
+            global start_x,start_y,end_x,end_y
+            start_x=fsc_window.start_x
+            start_y=fsc_window.start_y
+            end_x=fsc_window.end_x
+            end_y=fsc_window.end_y
 
-    fsc_window.attributes("-alpha",0.6)
-    fsc_window.attributes("-topmost",True)
-    fsc_window.attributes("-fullscreen",True)
+            fsc_window.destroy()
 
-    cv=tk.Canvas(fsc_window,bg="white")
-    cv.place(x=0,y=0,width=fsc_window.winfo_screenwidth(),height=fsc_window.winfo_screenheight())
-
-    def grab(event):
-        global start_x,start_y,end_x,end_y
-
-        fsc_window.destroy()
-
-        if not((end_x-start_x==0)and(end_y-start_y==0)):
-            if end_x<start_x:
-                start_x,end_x=end_x,start_x
-            if end_y<start_y:
-                start_y,end_y=end_y,start_y
-
-    fsc_window.bind("<ButtonRelease-1>",grab)
-    fsc_window.bind("<Button-1>",start)
-    fsc_window.bind("<B1-Motion>",lambda event:OnDrag(event,cv))
-    fsc_window.bind("<Escape>",lambda event:fsc_window.destroy())
-
-    if main_window==None:
-        fsc_window.mainloop()
-    #end
+        fsc_window.bind("<ButtonRelease-1>",grab)
+        fsc_window.bind("<Escape>",lambda event:fsc_window.destroy())
+        #end
     file_path=settings["save-path"]+datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
     screen = ImageGrab.grab((start_x,start_y,end_x,end_y))
     width, height = screen.size
@@ -231,7 +217,8 @@ def start_GIF():
     else:
         messagebox.showwarning("轻量截图-警告","不能同时录制屏幕视频和录制GIF")
 
-def listen_key(key):
+#按下按键
+def listen_key_press(key):
     global PrtScr,Ctrl,Shift
     #特殊按键监听
     if key==keyboard.Key.print_screen:
@@ -241,22 +228,15 @@ def listen_key(key):
     if key==keyboard.Key.shift or key==keyboard.Key.shift_r or key==keyboard.Key.shift_l:
         Shift=True
     #如果按下组合键
-    if PrtScr and Ctrl==False and Shift ==False:
-        PrtScr=False
+    if PrtScr and Ctrl==False and Shift==False:
         full_screenshot()
-    elif PrtScr==True and Ctrl==True and Shift==False:
-        PrtScr=False
-        Ctrl=False
+    elif PrtScr and Ctrl and Shift==False:
         start_rect_screenshot()
         
-    elif PrtScr==True and Shift==True and Ctrl==False and is_doing==False:
-        PrtScr=False
-        Shift=False
+    elif PrtScr and Shift and Ctrl==False and is_doing==False:
         start_video()
 
-    elif PrtScr==True and Shift==True and Ctrl==False and is_doing==True:
-        PrtScr=False
-        Shift=False
+    elif PrtScr and Shift and Ctrl==False and is_doing:
         stop_video_or_GIF()#结束视频录制
 
     elif PrtScr and Shift and Ctrl and is_doing==False:
@@ -267,6 +247,21 @@ def listen_key(key):
 
     elif PrtScr and Shift and Ctrl and is_doing:
         stop_video_or_GIF()#结束GIF
+#松开按键
+def listen_key_release(key):
+    global PrtScr,Ctrl,Shift
+    if key==keyboard.Key.print_screen:
+        PrtScr=True
+    if key==keyboard.Key.ctrl or key==keyboard.Key.ctrl_r or key==keyboard.Key.ctrl_l:
+        Ctrl=True
+    if key==keyboard.Key.shift or key==keyboard.Key.shift_r or key==keyboard.Key.shift_l:
+        Shift=True
+
+'''其他功能函数'''
+#如果存放截图的文件夹不存在就创建一个
+def create_dirs(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
 #退出整个程序函数
 def on_exit(icon):
     icon.stop()
@@ -275,11 +270,26 @@ def on_exit(icon):
 def open_image_dir():
     global settings
     os.system(f"start {settings['save-path']}")
+#设置
+def config():
+    global main_window
+    #创建并初始化窗口
+    window=tk.Toplevel(main_window)
+    window.geometry("400x400")
+    window.resizable(False,False)
+    window.attributes("-toolwindow",True)
+    window.title("设置")
+    pass
+    
 #键盘监听的函数
 def key_listener():
     #监听键盘
-    with keyboard.Listener(on_press=listen_key) as listener:
+    with keyboard.Listener(on_press=listen_key_press,on_release=listen_key_release) as listener:
         listener.join()
+    '''
+    with keyboard.GlobalHotKeys({"<print_screen>":full_screenshot,"<ctrl>+p":start_rect_screenshot,"<shift>+p":start_video,"<ctrl>+<shift>+p":start_GIF}) as x:
+        x.join()
+    '''
 #全局键盘事件监听
 if __name__=="__main__":
     create_dirs(settings["save-path"])
@@ -292,8 +302,8 @@ if __name__=="__main__":
     #显示系统托盘
     icon_img=Image.open("images/icon.jpg")#图标
     #托盘菜单
-    menu0=pystray.MenuItem(text="🪟显示主窗口",action=show_GUI)
-    menu1=pystray.MenuItem(text="⚙️设置",action=None,enabled=False)
+    menu0=pystray.MenuItem(text="🪟显示主窗口",action=main_window.deiconify)
+    menu1=pystray.MenuItem(text="⚙️设置",action=config)
     menu2=pystray.MenuItem(text="⏹️停止",action=stop_video_or_GIF,enabled=False)
     menu3=pystray.MenuItem(text="全屏截图",action=full_screenshot)
     menu4=pystray.MenuItem(text="矩形截图",action=start_rect_screenshot)
