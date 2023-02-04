@@ -223,27 +223,29 @@ def start_rect_screenshot():
         pass
 
 def start_video():
-    global is_video_running,menu2
+    global is_video_running,menu2,menu7
 
     if is_video_running==False:
         is_video_running=True
         menu2.__init__(text="⏹️停止录屏",action=stop_video,enabled=True)
+        menu7.__init__(text="录屏",action=start_video,enalbled=False)
         #创建并启动视频录制线程
         video_thread=threading.Thread(target=make_video)
         video_thread.start()
     else:
-        messagebox.showwarning("轻量截屏-警告","正在录制视频")
+        stop_video()
 def start_GIF():
-    global is_GIF_running,menu3
+    global is_GIF_running,menu3,menu6
 
     if is_GIF_running==False:
         is_GIF_running=True
         menu3.__init__(text="⏹️停止录制GIF",action=stop_GIF,enabled=True)
+        menu6.__init__(text="录制GIF",action=start_GIF,enabled=False)
         #创建并启动GIF线程
         GIF_thread=threading.Thread(target=make_GIF)
         GIF_thread.start()
     else:
-        messagebox.showwarning("轻量截屏-警告","正在录制GIF")
+        stop_GIF()
 
 '''其他功能函数'''
 #如果存放截屏的文件夹不存在就创建一个
