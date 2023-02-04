@@ -2,5 +2,11 @@
     "image-save-mode":"clipoard",
     "save-path":"C://Users//LightScreenshotImages//",
     "video-audio":1,
-    "get-area":0
+    "get-area":0,
+    "hotkeys":{
+        "full_screenshot":"<ctrl>+0",
+        "rect_screenshot":"<ctrl>+1",
+        "GIF":"<ctrl>+2",
+        "video":"<ctrl>+3"
+    }
 }
