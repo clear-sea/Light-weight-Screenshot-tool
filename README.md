@@ -55,9 +55,10 @@
 基本完善了功能，但是快捷键有问题，不能图形化设置，请手动修改settings.json
 
 ## 1.3 beta
-更改了为了修复快捷键bug修改了快捷键，目前快捷键没有问题。录屏和录制屏幕GIF可以同时进行，功能更完善
+更改了为了修复快捷键bug修改了快捷键，目前快捷键没有问题。录屏和录制屏幕GIF可以同时进行，功能更完善。改
 
-使用第三方库：PIL，pynput，sounddevice，pyopencv2，pystray
+## 使用第三方库
+PIL，pynput，sounddevice，pyopencv2，pystray
 
 ![image](https://user-images.githubusercontent.com/111341725/216746287-4bcb13e2-35b3-41a1-8cdb-37c12c5dd198.png)
 ![2023-02-04_11_35_06](https://user-images.githubusercontent.com/111341725/216746291-e864d00e-c81d-4886-8f88-55fdeb60aae5.gif)
