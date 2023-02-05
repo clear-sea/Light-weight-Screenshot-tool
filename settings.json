@@ -1,7 +1,7 @@
 {
     "image-save-mode":"clipoard",
     "save-path":"C://Users//LightScreenshotImages//",
-    "video-audio":1,
+    "video-audio":"",
     "get-area":0,
     "hotkeys":{
         "full_screenshot":"<ctrl>+0",

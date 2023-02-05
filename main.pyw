@@ -12,8 +12,22 @@ import pystray#windows系统托盘 第三方库
 import win32clipboard
 from io import BytesIO
 import Widgets
+import pyaudio
+from moviepy import editor
+import wave
 
 #创建并且初始化全局变量
+"""
+chunk_size: 每个缓冲区的帧数
+channels: 单声道
+rate: 采样频率
+"""
+CHUNK_SIZE = 1024
+CHANNELS = 2
+FORMAT = pyaudio.paInt16
+RATE = 48000
+allowRecording = False
+
 start_x=start_y=end_x=end_y=0
 
 is_GIF_running=False
@@ -21,9 +35,6 @@ is_video_running=False
 is_collecting=False
 
 main_window=None
-#读取配置文件
-with open("settings.json","r",encoding="utf-8") as f:
-    settings=json.load(f)
 
 #显示gui界面函数
 def show_GUI():
@@ -65,6 +76,56 @@ def show_GUI():
     main_window.mainloop()
 
 #功能函数
+#采集音频
+def record_audio(filename):
+    global allowRecording,settings
+    
+    allowRecording=True
+    p = pyaudio.PyAudio()
+
+    if settings["video-audio"]=="pc":
+        for i in range(p.get_device_count()):
+            dev=p.get_device_info_by_index(i)
+            if "立体声混音" in dev["name"]:
+                input_device_index=i
+                break
+            else:
+                input_device_index=-1
+                messagebox.showerror("错误","无法录制扬声器声音")
+                p.terminate()
+                return
+    
+    print('开始录音')
+    stream = p.open(format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    input=True,
+                    frames_per_buffer=CHUNK_SIZE
+                    )
+
+    wf = wave.open(filename, 'wb')
+    wf.setnchannels(CHANNELS)
+    wf.setsampwidth(p.get_sample_size(FORMAT))
+    wf.setframerate(RATE)
+    while allowRecording:
+        data = stream.read(CHUNK_SIZE)
+        wf.writeframes(data)
+
+    wf.close()
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+#合成音视频
+def merge(audio_file,video_file):
+     # # # 实现音频视频合成
+    print("video audio merge!!!!!")
+    audioclip = editor.AudioFileClip(audio_file)
+    videoclip = editor.VideoFileClip(video_file)
+    videoclip2 = videoclip.set_audio(audioclip)
+    video = editor.CompositeVideoClip([videoclip2])
+    """ *** bitrate 设置比特率，比特率越高， 合并的视频越清晰，视频文件也越大，合并的速度会很慢"""
+    video.write_videofile(video_file, codec='mpeg4', bitrate='2000k')
+
 #0全屏截屏函数
 def full_screenshot():
     global icon
@@ -178,14 +239,16 @@ def make_video():
         fsc_window.bind("<ButtonRelease-1>",grab)
         fsc_window.bind("<Escape>",lambda event:fsc_window.destroy())
         #end
-    file_path=settings["save-path"]+datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
+    file_path=settings["save-path"]+datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")+".mp4"
+    with open("temp/temp_video_file_name.txt","w",encoding="utf-8") as f:
+        f.write(file_path)
     if settings["get-area"]:
         screen = ImageGrab.grab((start_x,start_y,end_x,end_y))
     else:
         screen = ImageGrab.grab()
     width, height = screen.size
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    video = cv2.VideoWriter(f'{file_path}.mp4', fourcc, 20, (width, height))
+    video = cv2.VideoWriter(file_path, fourcc, 20, (width, height))
 
     icon.notify("开始录制视频","轻量截屏-录制视频")
     #开始录制
@@ -203,13 +266,23 @@ def make_video():
     video.release()
 
 def stop_video():
-    global is_video_running,menu2
+    global is_video_running,menu2,menu7,allowRecording
     menu2.__init__(text="⏹️停止录屏",action=stop_video,enabled=False)
+    menu7.__init__(text="录屏",action=start_video,enabled=True)
     is_video_running=False
+    allowRecording=False
+
+    with open("temp/temp_video_file_name.txt","r",encoding="utf-8") as f:
+        file_name=f.read()
+    if settings["video-audio"]!="":
+        merge("temp/temp_audio.wav",file_name)
+        #清理缓存文件
+        os.remove("temp/temp_audio.wav")
 
 def stop_GIF():
-    global is_GIF_running,menu3
+    global is_GIF_running,menu3,menu7
     menu3.__init__(text="⏹️停止录制GIF",action=stop_GIF,enabled=False)
+    menu7.__init__(text="录制GIF",action=start_GIF,enabled=True)
     is_GIF_running=False
 
 def start_rect_screenshot():
@@ -228,12 +301,18 @@ def start_video():
     if is_video_running==False:
         is_video_running=True
         menu2.__init__(text="⏹️停止录屏",action=stop_video,enabled=True)
-        menu7.__init__(text="录屏",action=start_video,enalbled=False)
+        menu7.__init__(text="录屏",action=start_video,enabled=False)
         #创建并启动视频录制线程
         video_thread=threading.Thread(target=make_video)
+        if settings["video-audio"]!="":
+            audio_thread=threading.Thread(target=record_audio,args=("temp/temp_audio.wav",))
+            audio_thread.start()
+
         video_thread.start()
+        
     else:
         stop_video()
+        
 def start_GIF():
     global is_GIF_running,menu3,menu6
 
@@ -269,8 +348,7 @@ def open_image_dir():
 #设置
 def config():
     global main_window,settings
-    #创建并初始化窗口
-    window=Widgets.Setting_Window(main_window,settings,(400,400))
+
     
 #关于
 def about():
@@ -290,6 +368,10 @@ def key_listener():
 
 #全局键盘事件监听
 if __name__=="__main__":
+    #读取配置文件
+    with open("settings.json","r",encoding="utf-8") as f:
+        settings=json.load(f)
+    #创建截图存放文件夹
     create_dirs(settings["save-path"])
     gui_thread = threading.Thread(target=show_GUI)
     key_listener_thread=threading.Thread(target=key_listener)
@@ -309,7 +391,7 @@ if __name__=="__main__":
     menu6=pystray.MenuItem(text="录制GIF",action=start_GIF)
     menu7=pystray.MenuItem(text="录制视频",action=start_video)
     menu8=pystray.MenuItem(text="📂打开截屏文件夹",action=open_image_dir)
-    menu9=pystray.MenuItem(text="❌退出",action=on_exit,default=True)
+    menu9=pystray.MenuItem(text="❌退出",action=on_exit)
     
     menu=pystray.Menu(menu0,menu1,menu2,menu3,menu4,menu5,menu6,menu7,menu8,menu9)
     #显示托盘图标

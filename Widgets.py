@@ -2,25 +2,32 @@ import tkinter as tk
 import webbrowser
 
 class Button:
-    def __init__(self,parent,pos,size,text,command,text_color="black",bg="#f0f0f0",fg="#bcc4cd"):
+    def __init__(self,parent,pos,size,text,command,text_color="black",bg="#f0f0f0",fg="#bcc4cd",click_color="black"):
         self.text_color=text_color
         self.bg=bg
         self.fg=fg
         self.x,self.y=pos
         self.width,self.height=size
         self.text=text
+        self.click_color=click_color
 
         self.btn=tk.Label(parent,text=self.text,fg=self.text_color,bg=self.bg)
         self.btn.place(x=self.x,y=self.y,width=self.width,height=self.height)
 
         self.btn.bind("<Enter>",self._change_enter)
         self.btn.bind("<Leave>",self._change_leave)
+        self.btn.bind("<Button-1>",self._change_click)
+        self.btn.bind("<ButtonRelease-1>",self._change_release)
         self.btn.bind("<Button-1>",lambda event:command())
 
     def _change_enter(self,event):
         self.btn["bg"]=self.fg
     def _change_leave(self,event):
         self.btn["bg"]=self.bg
+    def _change_click(self,event):
+        self.btn["bg"]=self.click_color
+    def _change_release(self,event):
+        self.btn["bg"]=self.fg
 
 class Drag_Window(tk.Toplevel):
     def __init__(self,parent):
@@ -68,13 +75,9 @@ class Drag_Window(tk.Toplevel):
             if self.end_y<self.start_y:
                 self.start_y,self.end_y=self.end_y,self.start_y
 
-class Setting_Window(tk.Toplevel):
-    def __init__(self,parent,settings,size,title="设置"):
-        tk.Toplevel.__init__(self,parent)
-        self.geometry(f"{size[0]}x{size[1]}")
-        self.resizable(False,False)
-        self.title(title)
-        self.iconbitmap("images/icon.ico")
+class Confige_Panel(tk.Frame):
+    def __init__(self,parent,settings,size):
+        tk.Frame.__init__(self,parent)
 
 class HyperLink:
     def __init__(self,parent,text,link,pos,size,font,bg="white",text_color="blue"):
