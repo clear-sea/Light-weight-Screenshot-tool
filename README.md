@@ -57,6 +57,12 @@
 ## 1.3 beta
 更改了为了修复快捷键bug修改了快捷键，目前快捷键没有问题。录屏和录制屏幕GIF可以同时进行，功能更完善。改UI.py为Widgets.py，退出是新增对话框询问是否确定要退出，防止点错
 
+## 1.7 beta
+修复了小bug，并且更改了托盘图标菜单
+
+## 2.0 beta
+更改了界面，全面使用ttkbootstrap，即将完成图形化设置功能
+
 ## 使用第三方库
 PIL，pynput，pyaudio，py
 opencv2，pystray，moviepy
