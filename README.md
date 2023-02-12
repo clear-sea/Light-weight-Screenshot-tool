@@ -58,9 +58,8 @@
 更改了为了修复快捷键bug修改了快捷键，目前快捷键没有问题。录屏和录制屏幕GIF可以同时进行，功能更完善。改UI.py为Widgets.py，退出是新增对话框询问是否确定要退出，防止点错
 
 ## 使用第三方库
-PIL，pynput，pyaudio，pyopencv2，pystray，moviepy
+PIL，pynput，pyaudio，py
+opencv2，pystray，moviepy
 
-（下图是1.3版本效果图）
-
-![image](https://user-images.githubusercontent.com/111341725/216746287-4bcb13e2-35b3-41a1-8cdb-37c12c5dd198.png)
-![2023-02-04_11_35_06](https://user-images.githubusercontent.com/111341725/216746291-e864d00e-c81d-4886-8f88-55fdeb60aae5.gif)
+（下图是2.0版本效果图）
+![2023-02-12_16_17_15](https://user-images.githubusercontent.com/111341725/218300549-e0040ea7-3920-43c0-b5c7-65b6e2cb1d46.jpg)
