@@ -1,4 +1,4 @@
-# LightScreenShot
+# Lightweight Screenshot tool
 
 使用Python写的学习型和实用性截图软件，正在更新
 
