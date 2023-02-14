@@ -1,6 +1,6 @@
-# Lightweight Screenshot tool
+# Lightweight-Screenshot tool轻量截屏工具
 
-使用Python写的学习型和实用性截图软件，正在更新
+使用Python语言写的适用于windows系统的实用性截图软件，最新版本2.0.0，正在更新
 
 计划功能：
 
@@ -20,30 +20,18 @@
 
 8.❌加水印
 
+9.❌屏幕批注
+
+10.❌图形化设置（目前仅能手动修改settings.json）
+
 更新日志如下
 ## 0.1
 使用wxpython做界面
 ## 0.2
 改用tkinter做全局界面
 
-5.设置（✅保存模式：储存到指定位置或储存到剪切板；✅储存位置：目录；❌录屏模式：录制内部声音或麦克风声音或不录制声音，录制质量等）
-在settings.json文件中，目前仅能手动修改
-
 ## 1.0 alpha
-
-计划功能：
-
-1.✅全屏截图
-
-2.✅矩形截图
-
-3.✅录制GIF（理论上可以，还不完善）
-
-4.✅录制视频
-
-5.❌指定窗口录制（待考虑）
-
-6.❌设置
+添加了全局快捷键，重要更新
 
 ## 1.1 beta
 前四项功能已实现，增加了使用pystray制作的系统托盘功能。去掉了grab.py，将其主要功能函数删减并与main.pyw合并
@@ -64,8 +52,10 @@
 更改了界面，全面使用ttkbootstrap，即将完成图形化设置功能
 
 ## 使用第三方库
-PIL，pynput，pyaudio，py
-opencv2，pystray，moviepy
+PIL，pynput，pyaudio，pyopencv2，pystray，moviepy，pyinstaller，ttkbootstrap
+
+## ⚠️Warning警告
+目前2.0.0版本由于打包问题无法正常使用，计划使用nuitka打包
 
 （下图是2.0版本效果图）
 ![2023-02-12_16_17_15](https://user-images.githubusercontent.com/111341725/218300549-e0040ea7-3920-43c0-b5c7-65b6e2cb1d46.jpg)
