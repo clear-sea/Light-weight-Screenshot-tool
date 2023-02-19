@@ -2,7 +2,7 @@ import webbrowser
 import ttkbootstrap as ttk
 from ttkbootstrap import dialogs
 from pynput import keyboard#键盘监听 第三方库
-from PIL import Image,ImageGrab#PIL图像处理 第三方库
+from PIL import Image,ImageGrab,ImageTk#PIL图像处理 第三方库
 import json#json文件解析 内置库
 import os#文件操作 内置库
 import datetime#获取日期时间 内置库
@@ -53,28 +53,31 @@ def show_GUI():
     labels_frame=ttk.Frame(tabs,width=400,height=400)
     #文本标签
     #0全屏文本
-    l1=ttk.Label(labels_frame,text="全屏截屏\nctrl+0",anchor="center")
+    l1=ttk.Label(labels_frame,text=f"全屏截屏\n{settings['hotkeys']['full_screenshot']}",anchor="center")
     l1.place(x=0,y=0,width=100,height=100)
     #1矩形文本
-    l2=ttk.Label(labels_frame,text="矩形截屏\n(按esc退出)\nCtrl+1",anchor="center")
+    l2=ttk.Label(labels_frame,text=f"矩形截屏\n(按esc退出)\n{settings['hotkeys']['rect_screenshot']}",anchor="center")
     l2.place(x=100,y=0,width=100,height=100)
     #2GIF文本
-    l3=ttk.Label(labels_frame,text="开始/结束\nGIF录制\nCtrl+2",anchor="center")
+    l3=ttk.Label(labels_frame,text=f"开始/结束\nGIF录制\n{settings['hotkeys']['GIF']}",anchor="center")
     l3.place(x=200,y=0,width=100,height=100)
     #3视频录制文本
-    l4=ttk.Label(labels_frame,text="开始/结束\n视频录制\nCtrl+3",anchor="center")
+    l4=ttk.Label(labels_frame,text=f"开始/结束\n视频录制\n{settings['hotkeys']['video']}",anchor="center")
     l4.place(x=300,y=0,width=100,height=100)
 
     ##设置框
     config_frame=ttk.Frame(tabs,width=400,height=400)
     #确定按钮
-    ok_btn=ttk.Button(config_frame,bootstyle=ttk.PRIMARY)
-    ok_btn.place(x=340,y=360,width=50,height=20)
+    ok_btn=ttk.Button(config_frame,bootstyle=ttk.PRIMARY,text="确定")
+    ok_btn.place(x=340,y=340,width=50,height=30)
     #0图像储存模式
-    save_mode_value=ttk.StringVar()
+    save_mode_frame=ttk.LabelFrame(config_frame,text="截图储存模式")
+    save_mode_frame.pack()
+    
+    save_mode_value=ttk.StringVar(save_mode_frame,"0")
     save_mode_value_dict={"0":"clipboard","1":"file"}
-    ttk.Radiobutton(config_frame,text="储存到剪切板",variable=save_mode_value,value=0).place(x=0,y=0)
-    ttk.Radiobutton(config_frame,text="储存到文件夹",variable=save_mode_value,value=1).place(x=0,y=20)
+    ttk.Radiobutton(save_mode_frame,text="储存到剪切板",variable=save_mode_value,value=0).place(x=0,y=0)
+    ttk.Radiobutton(save_mode_frame,text="储存到文件夹",variable=save_mode_value,value=1).place(x=0,y=20)
 
     ##功能按钮框
     btns_frame=ttk.Frame(tabs,width=400,height=400)
@@ -85,17 +88,28 @@ def show_GUI():
     
     ##关于框
     about_frame=ttk.Frame(tabs,width=400,height=400)
-    text=ttk.Text(about_frame,width=400,height=400,font=("宋体",12))
-    text.place(x=0,y=0)
-    text.insert("0.0","轻量截屏，使用python语言，结合多个第三方库\n完整项目和详细说明链接地址：\n")
-    hyper_link=ttk.Label(text,text="LightScreenShot项目",bootstyle=ttk.PRIMARY,cursor="hand2")
-    hyper_link.bind("<Button-1>",lambda event:webbrowser.open("https://github.com/LightByteCode/LightScreenShot"))
-    text.window_create("3.0",window=hyper_link)
+    about_text=ttk.Text(about_frame,width=400,height=400,font=("宋体",12))
+    about_text.place(x=0,y=0)
+    about_text.insert("0.0","轻量截屏，使用python语言，结合多个第三方库\n完整项目和详细说明链接地址：\n")
+    hyper_link=ttk.Label(about_text,text="Lightweight Screenshot tool项目",bootstyle=ttk.PRIMARY,cursor="hand2")
+    hyper_link.bind("<Button-1>",lambda event:webbrowser.open("https://github.com/LightByteCode/Lightweight-Screenshot-tool"))
+    about_text.window_create("3.0",window=hyper_link)
+    about_text.insert("5.0","by LightByteCode\n")
+    logo=Image.open("images/logo.jpg")
+    logo=ImageTk.PhotoImage(image=logo)
+    about_text.image_create("10.10",image=logo)
+    about_text.config(state="disabled")
     
+    ##帮助
+    help_frame=ttk.Frame(tabs,width=400,height=400)
+    help_text=ttk.Text(help_frame,width=400,height=400)
+    help_text.place(x=0,y=0)
+
     ##标签
     tabs.add(child=labels_frame,text="主页")
     tabs.add(child=config_frame,text="设置")
     tabs.add(child=btns_frame,text="其他")
+    tabs.add(child=help_frame,text="帮助")
     tabs.add(child=about_frame,text="关于")
     #主循环
     main_window.mainloop()
@@ -287,20 +301,27 @@ def start_video():
             fsc_window=plugins.Drag_Window(main_window)
             #截取屏幕区域
             def grab(event):
-                global start_x,start_y,end_x,end_y
+                global start_x,start_y,end_x,end_y,is_video_running
                 start_x=fsc_window.start_x
                 start_y=fsc_window.start_y
                 end_x=fsc_window.end_x
                 end_y=fsc_window.end_y
 
                 fsc_window.destroy()
+                is_video_running=True
 
             fsc_window.bind("<ButtonRelease-1>",grab)
             fsc_window.bind("<Escape>",lambda event:fsc_window.destroy())
             #end
-        is_video_running=True
+        else:
+            is_video_running=True
+
         #创建并启动视频录制线程
-        video_thread=threading.Thread(target=make_video,args=(start_x,start_y,end_x,end_y))
+        if settings["get-area"]:
+            video_thread=threading.Thread(target=make_video,args=(start_x,start_y,end_x,end_y))
+        else:
+            video_thread=threading.Thread(target=make_video,args=(None,None,None,None))
+
         video_thread.start()
         if settings["video-audio"]!="":
             audio_thread=threading.Thread(target=record_audio,args=("temp/temp_audio.wav",))
@@ -344,10 +365,6 @@ def on_exit(icon):
 def open_image_dir():
     global settings
     os.system(f"start {settings['save-path']}")
-#设置
-def config():
-    global settings
-    pass
 
 #键盘监听的函数
 def key_listener():
@@ -371,8 +388,8 @@ if __name__=="__main__":
     #显示系统托盘
     icon_img=Image.open("images/icon.jpg")#图标
     #托盘菜单
-    menu0=pystray.MenuItem(text="🪟显示主窗口",action=main_window.deiconify)
-    menu1=pystray.MenuItem(text="⚙️设置",action=config)
+    menu0=pystray.MenuItem(text="🪟显示主窗口",action=main_window.deiconify,default=True)
+    menu1=pystray.MenuItem(text="⚙️设置",action=main_window.deiconify)
     menu2=pystray.MenuItem(text="全屏截屏",action=full_screenshot)
     menu3=pystray.MenuItem(text="矩形截屏",action=start_rect_screenshot)
     menu4=pystray.MenuItem(text="开始/结束录制GIF",action=start_GIF)
