@@ -57,5 +57,7 @@ PIL，pynput，pyaudio，pyopencv2，pystray，moviepy，pyinstaller，ttkbootst
 ## ⚠️Warning警告
 目前2.0.0版本由于打包问题无法正常使用，计划使用nuitka打包
 
+## ⚠️由于其他原因已停止更新
+
 （下图是2.0版本效果图）
 ![2023-02-12_16_17_15](https://user-images.githubusercontent.com/111341725/218300549-e0040ea7-3920-43c0-b5c7-65b6e2cb1d46.jpg)
